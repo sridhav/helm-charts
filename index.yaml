@@ -44,6 +44,16 @@ entries:
   pcloud:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2024-02-24T22:53:39.67450722Z"
+    description: A Helm chart for Kubernetes
+    digest: ae74b9644994680415e3d79a52b5a59b70c82c6df6c9da50ce190bcc0165de04
+    name: pcloud
+    type: application
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/pcloud-0.1.2/pcloud-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2024-02-24T10:36:44.256084198Z"
     description: A Helm chart for Kubernetes
     digest: 13284c7b904e5d4dda5f516544bc64096337d5b6cf5cd5734688a418daa65f5c
@@ -52,4 +62,4 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/pcloud-0.1.1/pcloud-0.1.1.tgz
     version: 0.1.1
-generated: "2024-02-24T21:10:50.383799582Z"
+generated: "2024-02-24T22:53:39.674520354Z"
