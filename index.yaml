@@ -41,6 +41,17 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/mariadb-16.3.2/mariadb-16.3.2.tgz
     version: 16.3.2
+  nsgen:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-02-24T23:01:09.746108985Z"
+    description: A Helm chart for Kubernetes
+    digest: 9624ca7648f911615864150f15e8b142c0187d86457d14812941ff9c8005deab
+    name: nsgen
+    type: application
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/nsgen-0.1.0/nsgen-0.1.0.tgz
+    version: 0.1.0
   pcloud:
   - apiVersion: v2
     appVersion: 1.16.0
@@ -62,4 +73,4 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/pcloud-0.1.1/pcloud-0.1.1.tgz
     version: 0.1.1
-generated: "2024-02-24T22:53:39.674520354Z"
+generated: "2024-02-24T23:01:09.746126828Z"
