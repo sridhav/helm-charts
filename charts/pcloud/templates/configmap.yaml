@@ -1,0 +1,12 @@
+{{- if .Values.cm -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pcloud.fullname" . }}-entrypoint
+  labels:
+    {{- include "pcloud.labels" . | nindent 4 }}
+{{- with .Values.cm }}
+data:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}
