@@ -1,5 +1,46 @@
 apiVersion: v1
 entries:
+  mariadb:
+  - annotations:
+      category: Database
+      images: |
+        - name: mariadb
+          image: docker.io/bitnami/mariadb:11.2.3-debian-12-r4
+        - name: mysqld-exporter
+          image: docker.io/bitnami/mysqld-exporter:0.15.1-debian-12-r8
+        - name: os-shell
+          image: docker.io/bitnami/os-shell:12-debian-12-r16
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: 11.2.3
+    created: "2024-02-24T21:10:50.383790816Z"
+    dependencies:
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: MariaDB is an open source, community-developed SQL database server
+      that is widely in use around the world due to its enterprise features, flexibility,
+      and collaboration with leading tech firms.
+    digest: 40e05a5dbfeeae32692a6a4b078a661c8c2e58f264449a6dcbf073699e40a72a
+    home: https://bitnami.com
+    icon: https://bitnami.com/assets/stacks/mariadb/img/mariadb-stack-220x234.png
+    keywords:
+    - mariadb
+    - mysql
+    - database
+    - sql
+    - prometheus
+    maintainers:
+    - name: VMware, Inc.
+      url: https://github.com/bitnami/charts
+    name: mariadb
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/mariadb
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/mariadb-16.3.2/mariadb-16.3.2.tgz
+    version: 16.3.2
   pcloud:
   - apiVersion: v2
     appVersion: 1.16.0
@@ -11,4 +52,4 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/pcloud-0.1.1/pcloud-0.1.1.tgz
     version: 0.1.1
-generated: "2024-02-24T10:36:44.256089608Z"
+generated: "2024-02-24T21:10:50.383799582Z"
