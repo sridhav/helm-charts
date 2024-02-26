@@ -1,11 +1,11 @@
-{{- if .Values.cm -}}
+{{- if .Values.cronCm -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "pcloud.fullname" . }}-entrypoint
+  name: {{ include "photoprism.fullname" . }}-script
   labels:
-    {{- include "pcloud.labels" . | nindent 4 }}
-{{- with .Values.cm }}
+    {{- include "photoprism.labels" . | nindent 4 }}
+{{- with .Values.cronCm }}
 data:
   {{- toYaml . | nindent 2 }}
 {{- end }}
