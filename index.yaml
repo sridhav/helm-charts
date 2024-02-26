@@ -76,6 +76,16 @@ entries:
   photoprism:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2024-02-26T05:02:21.473610672Z"
+    description: A Helm chart for Kubernetes
+    digest: 50bd72a2ac373342862c6be3091864ef4435209214058f1cca56e3c2628dc09f
+    name: photoprism
+    type: application
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/photoprism-0.1.2/photoprism-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2024-02-26T00:24:24.910459067Z"
     description: A Helm chart for Kubernetes
     digest: 5259435a6365aa23a01b8e5ec7c57f7963889a95936b22fffd4f8f4a6899e165
@@ -94,4 +104,4 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/photoprism-0.1.0/photoprism-0.1.0.tgz
     version: 0.1.0
-generated: "2024-02-26T00:24:24.910470067Z"
+generated: "2024-02-26T05:02:21.4736253Z"
