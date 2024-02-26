@@ -9,27 +9,4 @@ spec:
   rateLimit:
     average: {{ .Values.middleware.rateLimit.average }}
     burst: {{ .Values.middleware.rateLimit.burst }}
-  redirectScheme:
-    scheme: https
-    permanent: true
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: {{ include "photoprism.fullname" . }}-ratelimit
-  labels:
-    {{- include "photoprism.labels" . | nindent 4 }}
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - kind: Rule
-      {{- with (first .Values.ingress.hosts) }}
-      match : "Host(`{{  .host }}`) && PathPrefix(`/`)"
-      {{- end }}
-      services:
-        - name: {{ include "photoprism.fullname" . }}
-          port: {{ .Values.service.port }}
-      middlewares:
-        - name: {{ include "photoprism.fullname" . }}-ratelimit
 {{- end -}}
