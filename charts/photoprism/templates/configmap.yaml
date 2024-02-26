@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "photoprism.fullname" . }}-script
+  name: photoprism-script
   labels:
     {{- include "photoprism.labels" . | nindent 4 }}
 {{- with .Values.cronCm }}

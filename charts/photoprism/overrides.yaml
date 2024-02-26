@@ -1,0 +1,288 @@
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: sprism.qunito.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: sprism-tls
+      hosts:
+        - sprism.qunito.com
+
+command:
+  - /bin/bash
+args:
+  - -c
+  - >
+    /opt/photoprism/bin/photoprism restore -i /photoprism/storage/backup/mysql/latest.sql; /opt/photoprism/bin/photoprism start;
+
+env:
+  - name: PHOTOPRISM_AUTH_MODE
+    value: password
+  - name: PHOTOPRISM_ADMIN_USER
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_ADMIN_USER
+  - name: PHOTOPRISM_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_ADMIN_PASSWORD
+  - name: PHOTOPRISM_SITE_URL
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_SITE_URL
+  - name: PHOTOPRISM_ORIGINALS_PATH
+    value: /photoprism/originals
+  - name: PHOTOPRISM_STORAGE_PATH
+    value: /photoprism/storage
+  - name: PHOTOPRISM_ORIGINALS_LIMIT
+    value: "5000"
+  - name: PHOTOPRISM_HTTP_COMPRESSION
+    value: gzip
+  - name: PHOTOPRISM_WORKERS
+    value: "2"
+  - name: PHOTOPRISM_LOG_LEVEL
+    value: info
+  - name: PHOTOPRISM_READONLY
+    value: "false"
+  - name: PHOTOPRISM_EXPERIMENTAL
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_CHOWN
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_WEBDAV
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_SETTINGS
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_TENSORFLOW
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_FACES
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_CLASSIFICATION
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_VECTORS
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_RAW
+    value: "false"
+  - name: PHOTOPRISM_RAW_PRESETS
+    value: "false"
+  - name: PHOTOPRISM_DETECT_NSFW
+    value: "false"
+  - name: PHOTOPRISM_UPLOAD_NSFW
+    value: "false"
+  - name: PHOTOPRISM_DISABLE_RAW
+    value: "false"
+  - name: PHOTOPRISM_JPEG_QUALITY
+    value: "85"
+  - name: PHOTOPRISM_DATABASE_DRIVER
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_DATABASE_DRIVER
+  - name: PHOTOPRISM_DATABASE_SERVER
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_DATABASE_SERVER
+  - name: PHOTOPRISM_DATABASE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_DATABASE_NAME
+  - name: PHOTOPRISM_DATABASE_USER
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_DATABASE_USER
+  - name: PHOTOPRISM_DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_DATABASE_PASSWORD
+  - name: PHOTOPRISM_SITE_CAPTION
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_SITE_CAPTION
+  - name: PHOTOPRISM_SITE_DESCRIPTION
+    valueFrom:
+      secretKeyRef:
+        name: sprism-secret
+        key: PHOTOPRISM_SITE_DESCRIPTION
+
+volumes:
+  - name: pcloud-data
+    hostPath:
+      path: "/data/pcloud"
+volumeMounts:
+  - name: pcloud-data
+    mountPath: /photoprism/originals/sridhar_google
+    subPath: "Backups/Google Photos - Sridhar"
+    mountPropagation: Bidirectional
+  - name: pcloud-data
+    mountPath: /photoprism/originals/sridhar_mobile
+    subPath: "Automatic Upload/Minion"
+    mountPropagation: Bidirectional
+  - name: pcloud-data
+    mountPath: /photoprism/storage
+    subPath: PrismCacheSridhar
+    mountPropagation: Bidirectional
+secrets:
+  name: sprism-secret
+  data:
+    PHOTOPRISM_ADMIN_PASSWORD: Qm9tbWFAMjYxMA==
+    PHOTOPRISM_ADMIN_USER: c2lk
+    PHOTOPRISM_DATABASE_DRIVER: bXlzcWw=
+    PHOTOPRISM_DATABASE_NAME: c3ByaXNt
+    PHOTOPRISM_DATABASE_PASSWORD: UGFuZGFAMjYxMA==
+    PHOTOPRISM_DATABASE_SERVER: bWFyaWFkYi5tYXJpYWRiOjMzMDY=
+    PHOTOPRISM_DATABASE_USER: cHJpc20=
+    PHOTOPRISM_SITE_CAPTION: UGVyc29uYWwgR2FsbGVyeQ==
+    PHOTOPRISM_SITE_DESCRIPTION: Q2FwdHVyaW5nIE1vbWVudHMsIENyZWF0aW5nIE1lbW9yaWVzLi4u
+    PHOTOPRISM_SITE_URL: aHR0cHM6Ly9zcHJpc20ucXVuaXRvLmNvbQ=
+
+cronCm:
+  backup.sh: |
+    #!/bin/bash
+    sleep 60
+    FOLDER=$1
+
+    bfile=`date +%Y%m%d_%H%M%S`.sql
+
+    echo "`date +%Y%m%d_%H%M%S` Delete old backups..."
+    ls -tp /photoprism/storage/backup/mysql/${FOLDER}/* | grep -v '/$' | tail -n +6 | xargs -I {} rm -rf -- {}
+
+    echo "`date +%Y%m%d_%H%M%S` Create a new ${FOLDER} backup..."
+    mkdir -p /tmp/backup
+    /opt/photoprism/bin/photoprism backup -i /tmp/backup/$bfile
+    if [ "$FOLDER" = "hourly" ]; then
+        cp -rf /tmp/backup/$bfile /photoprism/storage/backup/mysql/latest.sql
+    fi
+    gzip /tmp/backup/$bfile
+    mkdir -p /photoprism/storage/backup/mysql/${FOLDER}
+    mv /tmp/backup/$bfile.gz /photoprism/storage/backup/mysql/${FOLDER}/$bfile.gz
+
+jobs:
+  index:
+    image:
+      repository: photoprism/photoprism
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "*/5 * * * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - "/opt/photoprism/bin/photoprism index -c"
+
+  backup-hourly:
+    image:
+      repository: photoprism/photoprism
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "5 * * * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh hourly
+    volumes:
+      - name: scripts
+        configMap:
+          name: photoprism-script
+          defaultMode: 0755
+    volumeMounts:
+      - name: scripts
+        mountPath: /backup.sh
+        subPath: backup.sh
+
+  backup-daily:
+    image:
+      repository: photoprism/photoprism
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "25 4 * * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh daily
+    volumes:
+      - name: scripts
+        configMap:
+          name: photoprism-script
+          defaultMode: 0755
+    volumeMounts:
+      - name: scripts
+        mountPath: /backup.sh
+        subPath: backup.sh
+
+  backup-weekly:
+    image:
+      repository: photoprism/photoprism
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "30 4 * * 0"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh weekly
+    volumes:
+      - name: scripts
+        configMap:
+          name: photoprism-script
+          defaultMode: 0755
+    volumeMounts:
+      - name: scripts
+        mountPath: /backup.sh
+        subPath: backup.sh
+
+  backup-monthly:
+    image:
+      repository: photoprism/photoprism
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "35 4 1 * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh monthly
+    volumes:
+      - name: scripts
+        configMap:
+          name: photoprism-script
+          defaultMode: 0755
+    volumeMounts:
+      - name: scripts
+        mountPath: /backup.sh
+        subPath: backup.sh
