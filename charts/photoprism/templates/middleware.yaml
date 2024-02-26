@@ -2,7 +2,18 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: {{ include "photoprism.fullname" . }}
+  name: {{ include "photoprism.fullname" . }}-redirect
+  labels:
+    {{- include "photoprism.labels" . | nindent 4 }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "photoprism.fullname" . }}-ratelimit
   labels:
     {{- include "photoprism.labels" . | nindent 4 }}
 spec:
@@ -32,5 +43,6 @@ spec:
         - name: {{ include "photoprism.fullname" . }}
           port: {{ .Values.service.port }}
       middlewares:
-        - name: {{ include "photoprism.fullname" . }}
+        - name: {{ include "photoprism.fullname" . }}-redirect
+        - name: {{ include "photoprism.fullname" . }}-ratelimit
 {{- end -}}
