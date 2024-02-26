@@ -22,6 +22,7 @@ metadata:
 spec:
   entryPoints:
     - web
+    - websecure
   routes:
     - kind: Rule
       {{- with (first .Values.ingress.hosts) }}
