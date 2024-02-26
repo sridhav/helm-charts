@@ -3,9 +3,9 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "photoprism.fullname" . }}-{{ $jobname }}
+  name: {{ include "photoprism.fullname" $ }}-{{ $jobname }}
   labels:
-    {{- include "photoprism.labels" . | nindent 4 }}
+    {{- include "photoprism.labels" $ | nindent 4 }}
 spec:
   concurrencyPolicy: {{ $job.concurrencyPolicy }}
   failedJobsHistoryLimit: {{ $job.failedJobsHistoryLimit }}
@@ -14,13 +14,13 @@ spec:
       template:
         metadata:
           labels:
-            app: {{ include "photoprism.fullname" . }}
+            app: {{ include "photoprism.fullname" $ }}
             cron: {{ $jobname }}
         spec:
         {{- if and (hasKey $job "serviceAccount") (hasKey $job.serviceAccount "name") }}
           serviceAccountName: {{ $job.serviceAccount.name }}
         {{- else }}
-          serviceAccountName: {{ $.Release.Name}}-{{ $jobname }}
+          serviceAccountName: {{ $.Release.Name }}-{{ $jobname }}
         {{- end }}
         {{- with .Values.securityContext $ }}
           securityContext:
