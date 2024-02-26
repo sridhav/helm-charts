@@ -27,7 +27,7 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "photoprism.fullname" . }}
+  name: {{ include "photoprism.fullname" . }}-redirect
   labels:
     {{- include "photoprism.labels" . | nindent 4 }}
 spec:
@@ -44,5 +44,26 @@ spec:
           port: {{ .Values.service.port }}
       middlewares:
         - name: {{ include "photoprism.fullname" . }}-redirect
+        - name: {{ include "photoprism.fullname" . }}-ratelimit
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "photoprism.fullname" . }}-ratelimit
+  labels:
+    {{- include "photoprism.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - kind: Rule
+      {{- with (first .Values.ingress.hosts) }}
+      match : "Host(`{{  .host }}`)"
+      {{- end }}
+      services:
+        - name: {{ include "photoprism.fullname" . }}
+          port: {{ .Values.service.port }}
+      middlewares:
         - name: {{ include "photoprism.fullname" . }}-ratelimit
 {{- end -}}
