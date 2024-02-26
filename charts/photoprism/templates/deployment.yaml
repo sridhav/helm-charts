@@ -53,11 +53,11 @@ spec:
           livenessProbe:
             tcpSocket:
               port: {{ .Values.containerPort }}
-            initialDelaySeconds: 120
+            initialDelaySeconds: 30
           readinessProbe:
             tcpSocket:
               port: {{ .Values.containerPort }}
-            initialDelaySeconds: 120
+            initialDelaySeconds: 30
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
