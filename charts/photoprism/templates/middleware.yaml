@@ -21,7 +21,6 @@ metadata:
     {{- include "photoprism.labels" . | nindent 4 }}
 spec:
   entryPoints:
-    - web
     - websecure
   routes:
     - kind: Rule
