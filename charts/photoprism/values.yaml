@@ -90,3 +90,9 @@ volumeMounts: []
 volumes: []
 
 env: []
+
+jobs: {}
+
+command: []
+
+args: []
