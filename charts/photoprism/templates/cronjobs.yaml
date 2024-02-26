@@ -47,7 +47,6 @@ spec:
               {{ toYaml . | nindent 14 }}
             {{- end }}
             {{- with $job.volumeMounts }}
-            volumeMounts:
               {{ toYaml . | nindent 14 }}
             {{- end }}
           {{- with $job.nodeSelector }}
