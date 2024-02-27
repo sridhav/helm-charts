@@ -28,6 +28,6 @@ metadata:
   labels:
     {{- include "photoprism.labels" . | nindent 4 }}
 spec:
-  inFlightConn:
-    amount: {{ .Values.middleware.inFlightConn.amount }}
+  inFlightReq:
+    amount: {{ .Values.middleware.inFlightReq.amount }}
 {{- end -}}

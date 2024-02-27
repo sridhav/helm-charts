@@ -108,5 +108,5 @@ middleware:
   rateLimit:
     average: 30
     burst: 50
-  inFlightConn:
+  inFlightReq:
     amount: 10
