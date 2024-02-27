@@ -9,4 +9,15 @@ spec:
   rateLimit:
     average: {{ .Values.middleware.rateLimit.average }}
     burst: {{ .Values.middleware.rateLimit.burst }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "photoprism.fullname" . }}-secure
+  labels:
+    {{- include "photoprism.labels" . | nindent 4 }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
 {{- end -}}
