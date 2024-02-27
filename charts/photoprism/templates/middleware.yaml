@@ -20,4 +20,14 @@ spec:
   redirectScheme:
     scheme: https
     permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "photoprism.fullname" . }}-inflight
+  labels:
+    {{- include "photoprism.labels" . | nindent 4 }}
+spec:
+  inFlightConn:
+    amount: 10
 {{- end -}}

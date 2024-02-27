@@ -106,5 +106,7 @@ cronCm: {}
 middleware:
   enabled: true
   rateLimit:
-    average: 50
-    burst: 100
+    average: 30
+    burst: 50
+  inFlightConn:
+    amount: 10
