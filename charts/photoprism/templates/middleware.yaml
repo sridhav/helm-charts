@@ -29,5 +29,5 @@ metadata:
     {{- include "photoprism.labels" . | nindent 4 }}
 spec:
   inFlightConn:
-    amount: 10
+    amount: {{ .Values.middleware.inFlightConn.amount }}
 {{- end -}}
