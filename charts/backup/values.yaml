@@ -28,6 +28,7 @@ cronCm:
     mv /tmp/backup/$bfile.gz /data/backup/${FOLDER}/$bfile.gz
 
 securityContext:
+  runAsUser: 0
   privileged: true
   allowPrivilegeEscalation: true
   capabilities:
