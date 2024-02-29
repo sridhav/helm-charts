@@ -20,7 +20,7 @@ cronCm:
 
     mkdir -p /tmp/backup
 
-    mysqldump -h ${MYSQL_HOST} -u ${MYSQL_USER} –p ${MYSQL_PASSWORD} ${MYSQL_DATABASE} > /tmp/backup/$bfile
+    mysqldump ${MYSQL_DATABASE} -h ${MYSQL_HOST} -u ${MYSQL_USER} --password=${MYSQL_PASSWORD} > /tmp/backup/$bfile
 
     if [ "$FOLDER" = "hourly" ]; then
     cp -rf /tmp/backup/$bfile /data/backup/latest.sql;
