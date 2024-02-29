@@ -3,6 +3,8 @@ volumes: []
 serviceAccount:
   create: true
 
+env: []
+
 cronCm:
   backup.sh:
     #!/bin/bash
