@@ -3,6 +3,16 @@ entries:
   backup:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2024-02-29T08:38:46.801097745Z"
+    description: A Helm chart for Kubernetes
+    digest: fcb29dfa96edd793493ea819866c9513a9045316564f2d11d49e64e07f547a83
+    name: backup
+    type: application
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/backup-0.1.5/backup-0.1.5.tgz
+    version: 0.1.5
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2024-02-29T08:25:43.719258366Z"
     description: A Helm chart for Kubernetes
     digest: 71cb085262a7695355765a2798077ddd96aec3607710fb9beaf30c0ff7e4a4b0
@@ -355,4 +365,4 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/photoprism-0.1.0/photoprism-0.1.0.tgz
     version: 0.1.0
-generated: "2024-02-29T08:25:43.719332934Z"
+generated: "2024-02-29T08:38:46.801190238Z"
