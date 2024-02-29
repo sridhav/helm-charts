@@ -18,7 +18,7 @@ cronCm:
     echo "`date +%Y%m%d_%H%M%S` Create a new ${FOLDER} backup..."
     mkdir -p /tmp/backup
 
-    mysqldump -h ${MYSQL_HOST} -u ${MYSQL_USER} –p ${MYSQL_PASSWORD} ${MYSQL_DATABASE} > /tmp/backup/$bfile
+    /opt/bitnami/mariadb/bin/mysqldump -h ${MYSQL_HOST} -u ${MYSQL_USER} –p ${MYSQL_PASSWORD} ${MYSQL_DATABASE} > /tmp/backup/$bfile
 
     if [ "$FOLDER" = "hourly" ]; then
     cp -rf /tmp/backup/$bfile /data/backup/latest.sql
