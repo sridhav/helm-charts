@@ -45,7 +45,7 @@ secrets:
 jobs:
   backup-hourly:
     image:
-      repository: mariadb
+      repository: databack/mysql-backup
       tag: latest
       imagePullPolicy: IfNotPresent
     schedule: "30 * * * *"
@@ -61,7 +61,7 @@ jobs:
 
   backup-daily:
     image:
-      repository: mariadb
+      repository: databack/mysql-backup
       tag: latest
       imagePullPolicy: IfNotPresent
     schedule: "11 6 * * *"
@@ -77,7 +77,7 @@ jobs:
 
   backup-weekly:
     image:
-      repository: mariadb
+      repository: databack/mysql-backup
       tag: latest
       imagePullPolicy: IfNotPresent
     schedule: "45 7 * * 1"
@@ -93,7 +93,7 @@ jobs:
 
   backup-monthly:
     image:
-      repository: mariadb
+      repository: databack/mysql-backup
       tag: latest
       imagePullPolicy: IfNotPresent
     schedule: "5 1 1 * *"
