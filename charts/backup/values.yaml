@@ -1,0 +1,100 @@
+volumeMounts: []
+volumes: []
+serviceAccount:
+  create: true
+
+cronCm:
+  backup.sh:
+    #!/bin/bash
+    FOLDER=$1
+
+    bfile=`date +%Y%m%d_%H%M%S`.sql
+
+    echo "`date +%Y%m%d_%H%M%S` Delete old backups..."
+    ls -tp /data/backup/${FOLDER}/* | grep -v '/$' | tail -n +6 | xargs -I {} rm -rf -- {}
+
+    echo "`date +%Y%m%d_%H%M%S` Create a new ${FOLDER} backup..."
+    mkdir -p /tmp/backup
+
+    mysqldump -h ${MYSQL_HOST} -u ${MYSQL_USER} –p ${MYSQL_PASSWORD} ${MYSQL_DATABASE} > /tmp/backup/$bfile
+
+    if [ "$FOLDER" = "hourly" ]; then
+    cp -rf /tmp/backup/$bfile /data/backup/latest.sql
+    fi
+    gzip /tmp/backup/$bfile
+    mkdir -p /data/backup/${FOLDER}
+    mv /tmp/backup/$bfile.gz /data/backup/${FOLDER}/$bfile.gz
+
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+  capabilities:
+    add: ["SYS_ADMIN"]
+
+secrets:
+  data: {}
+
+jobs:
+  backup-hourly:
+    image:
+      repository: mariadb
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "30 * * * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh hourly
+
+  backup-daily:
+    image:
+      repository: mariadb
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "11 6 * * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh daily
+
+  backup-weekly:
+    image:
+      repository: mariadb
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "45 7 * * 1"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh weekly
+
+  backup-monthly:
+    image:
+      repository: mariadb
+      tag: latest
+      imagePullPolicy: IfNotPresent
+    schedule: "5 1 1 * *"
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+    command:
+      - /bin/bash
+    args:
+      - -c
+      - /backup.sh monthly
