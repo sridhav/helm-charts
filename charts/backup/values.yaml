@@ -13,18 +13,23 @@ cronCm:
     bfile=`date +%Y%m%d_%H%M%S`.sql
 
     echo "`date +%Y%m%d_%H%M%S` Delete old backups..."
+
     ls -tp /data/backup/${FOLDER}/* | grep -v '/$' | tail -n +6 | xargs -I {} rm -rf -- {}
 
     echo "`date +%Y%m%d_%H%M%S` Create a new ${FOLDER} backup..."
+
     mkdir -p /tmp/backup
 
     /opt/bitnami/mariadb/bin/mysqldump -h ${MYSQL_HOST} -u ${MYSQL_USER} –p ${MYSQL_PASSWORD} ${MYSQL_DATABASE} > /tmp/backup/$bfile
 
     if [ "$FOLDER" = "hourly" ]; then
-    cp -rf /tmp/backup/$bfile /data/backup/latest.sql
+    cp -rf /tmp/backup/$bfile /data/backup/latest.sql;
     fi
+
     gzip /tmp/backup/$bfile
+
     mkdir -p /data/backup/${FOLDER}
+
     mv /tmp/backup/$bfile.gz /data/backup/${FOLDER}/$bfile.gz
 
 securityContext:
