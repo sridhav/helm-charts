@@ -41,18 +41,18 @@ serviceMonitor:
       - port: metrics
         scheme: http
 
-persistence:
-{{- if .Values.immich.configuration }}
-  config:
-    enabled: true
-    type: configMap
-    name: {{ .Release.Name }}-immich-config
-{{- end }}
-  library:
-    enabled: true
-    mountPath: /usr/src/app/upload
-    existingClaim: {{ .Values.immich.persistence.library.existingClaim }}
-{{- end }}
+# persistence:
+# {{- if .Values.immich.configuration }}
+#   config:
+#     enabled: true
+#     type: configMap
+#     name: {{ .Release.Name }}-immich-config
+# {{- end }}
+#   library:
+#     enabled: true
+#     mountPath: /usr/src/app/upload
+#     existingClaim: {{ .Values.immich.persistence.library.existingClaim }}
+# {{- end }}
 
 {{ if .Values.microservices.enabled }}
 {{- $ctx := deepCopy . -}}
