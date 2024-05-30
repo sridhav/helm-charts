@@ -32,4 +32,4 @@ name: immich
 sources:
   - https://github.com/immich-app/immich-charts/tree/main/charts/immich
   - https://github.com/immich-app/immich
-version: 0.6.1
+version: 0.6.2
