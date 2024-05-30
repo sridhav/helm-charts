@@ -2,6 +2,13 @@
 global:
   nameOverride: machine-learning
 
+defaultPodOptions:
+  securityContext:
+    privileged: true
+    allowPrivilegeEscalation: true
+    capabilities:
+      add: ["SYS_ADMIN"]
+
 service:
   main:
     enabled: true

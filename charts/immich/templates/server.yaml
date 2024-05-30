@@ -19,6 +19,13 @@ podAnnotations:
   checksum/config: {{ .Values.immich.configuration | toYaml | sha256sum }}
 {{- end }}
 
+defaultPodOptions:
+  securityContext:
+    privileged: true
+    allowPrivilegeEscalation: true
+    capabilities:
+      add: ["SYS_ADMIN"]
+
 service:
   main:
     enabled: true
