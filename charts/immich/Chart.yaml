@@ -7,7 +7,7 @@ annotations:
         - name: Release Notes Breaking Changes
           url: https://github.com/immich-app/immich/releases/tag/v1.95.1
 apiVersion: v2
-appVersion: v1.100.0
+appVersion: v1.106.1
 dependencies:
   - name: common
     repository: https://bjw-s.github.io/helm-charts
@@ -32,4 +32,4 @@ name: immich
 sources:
   - https://github.com/immich-app/immich-charts/tree/main/charts/immich
   - https://github.com/immich-app/immich
-version: 0.6.2
+version: 0.7.0
