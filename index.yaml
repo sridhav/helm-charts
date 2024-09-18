@@ -603,4 +603,14 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/supabase-5.3.6/supabase-5.3.6.tgz
     version: 5.3.6
-generated: "2024-09-18T01:19:54.681710177Z"
+  - apiVersion: v2
+    created: "2024-09-18T19:24:43.94282933Z"
+    description: The open source Firebase alternative.
+    digest: 1667a76ac899dc83431e27ebaf4c33ab429818b1026e1d5fa174351cbcd5d6a6
+    icon: https://avatars.githubusercontent.com/u/54469796?s=280&v=4
+    name: supabase
+    type: application
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/supabase-0.1.3/supabase-0.1.3.tgz
+    version: 0.1.3
+generated: "2024-09-18T19:24:43.942916905Z"
