@@ -1,254 +1,245 @@
-{{- /*
-Copyright Broadcom, Inc. All Rights Reserved.
-SPDX-License-Identifier: APACHE-2.0
-*/}}
-
-{{- if .Values.storage.enabled }}
-apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+{{- if .Values.storage.enabled -}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "supabase.storage.fullname" . }}
-  namespace: {{ include "common.names.namespace" . | quote }}
-  {{- $versionLabel := dict "app.kubernetes.io/version" ( include "common.images.version" ( dict "imageRoot" .Values.storage.image "chart" .Chart ) ) }}
-  {{- $labels := include "common.tplvalues.merge" ( dict "values" ( list .Values.commonLabels $versionLabel ) "context" . ) }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" $labels "context" $ ) | nindent 4 }}
-    app.kubernetes.io/part-of: supabase
-    app.kubernetes.io/component: storage
-  {{- if .Values.commonAnnotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
-  {{- end }}
+  name: {{ include "supabase.storage.fullname" . }}
+  labels:
+    {{- include "supabase.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.storage.autoscaling.enabled }}
   replicas: {{ .Values.storage.replicaCount }}
-  {{- if .Values.storage.updateStrategy }}
-  strategy: {{- toYaml .Values.storage.updateStrategy | nindent 4 }}
   {{- end }}
-  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.storage.podLabels .Values.commonLabels $versionLabel ) "context" . ) }}
   selector:
-    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
-      app.kubernetes.io/component: storage
+    matchLabels:
+      {{- include "supabase.storage.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.storage.podAnnotations }}
       annotations:
-        {{- if .Values.storage.podAnnotations }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.storage.podAnnotations "context" $) | nindent 8 }}
-        {{- end }}
-        checksum/default-configmap: {{ include (print $.Template.BasePath "/storage/default-configmap.yaml") . | sha256sum }}
-        {{- if .Values.storage.extraConfig }}
-        checksum/extra-configmap: {{ include (print $.Template.BasePath "/storage/extra-configmap.yaml") . | sha256sum }}
-        {{- end }}
-        checksum/jwt-secret: {{ include (print $.Template.BasePath "/jwt-secret.yaml") . | sha256sum }}
-      labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
-        app.kubernetes.io/part-of: supabase
-        app.kubernetes.io/component: storage
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "supabase.storage.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ template "supabase.serviceAccountName" . }}
-      {{- include "supabase.imagePullSecrets" . | nindent 6 }}
-      automountServiceAccountToken: {{ .Values.storage.automountServiceAccountToken }}
-      {{- if .Values.storage.hostAliases }}
-      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.storage.hostAliases "context" $) | nindent 8 }}
+      restartPolicy: Always
+      {{- with .Values.storage.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.storage.affinity }}
-      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.storage.affinity "context" $) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.storage.podAffinityPreset "component" "storage" "customLabels" $podLabels "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.storage.podAntiAffinityPreset "component" "storage" "customLabels" $podLabels "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.storage.nodeAffinityPreset.type "key" .Values.storage.nodeAffinityPreset.key "values" .Values.storage.nodeAffinityPreset.values) | nindent 10 }}
-      {{- end }}
-      {{- if .Values.storage.nodeSelector }}
-      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.storage.nodeSelector "context" $) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.storage.tolerations }}
-      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.storage.tolerations "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.storage.priorityClassName }}
-      priorityClassName: {{ .Values.storage.priorityClassName | quote }}
-      {{- end }}
-      {{- if .Values.storage.schedulerName }}
-      schedulerName: {{ .Values.storage.schedulerName | quote }}
-      {{- end }}
-      {{- if .Values.storage.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.storage.topologySpreadConstraints "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.storage.podSecurityContext.enabled }}
-      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.storage.podSecurityContext "context" $) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.storage.terminationGracePeriodSeconds }}
-      terminationGracePeriodSeconds: {{ .Values.storage.terminationGracePeriodSeconds }}
-      {{- end }}
+      serviceAccountName: {{ include "supabase.storage.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.storage.podSecurityContext | nindent 8 }}
       initContainers:
-        {{- if not .Values.diagnosticMode.enabled }}
-        {{- if and .Values.volumePermissions.enabled .Values.storage.containerSecurityContext.enabled }}
-        - name: volume-permissions
-          image: {{ include "supabase.volumePermissions.image" . }}
-          imagePullPolicy: {{ .Values.volumePermissions.image.pullPolicy | quote }}
+        - name: init-db
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              {{- if .Values.db.enabled }}
+              value: {{ include "supabase.db.fullname" . | quote }}
+              {{- else }}
+              value: {{ .Values.auth.environment.DB_HOST | quote }}
+              {{- end }}
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.secret.db.secretRef }}
+                  name: {{ .Values.secret.db.secretRef }}
+                  key: {{ .Values.secret.db.secretRefKey.username | default "username" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.db" . }}
+                  key: username
+                  {{- end }}
+            - name: DB_PORT
+              value: {{ .Values.analytics.environment.DB_PORT | quote }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until pg_isready -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER); do
+              echo "Waiting for database to start..."
+              sleep 2
+              done
+            - echo "Database is ready"
+        {{- if .Values.minio.enabled }}
+        - env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "supabase.secret.s3" . }}
+                  key: keyId
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "supabase.secret.s3" . }}
+                  key: accessKey
+          name: init-bucket
+          image: minio/mc
+          imagePullPolicy: IfNotPresent
           command:
-            - sh
+            - /bin/sh
             - -c
             - |
-              mkdir -p {{ .Values.storage.persistence.mountPath }}
-              find {{ .Values.storage.persistence.mountPath }} -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -R {{ .Values.storage.containerSecurityContext.runAsUser }}:{{ .Values.storage.podSecurityContext.fsGroup }}
-          securityContext: {{- include "common.tplvalues.render" (dict "value" .Values.volumePermissions.containerSecurityContext "context" $) | nindent 12 }}
-          {{- if .Values.volumePermissions.resources }}
-          resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
-          {{- else if ne .Values.volumePermissions.resourcesPreset "none" }}
-          resources: {{- include "common.resources.preset" (dict "type" .Values.volumePermissions.resourcesPreset) | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: data
-              mountPath: {{ .Values.storage.persistence.mountPath }}
-              subPath: {{ .Values.storage.persistence.subPath }}
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-        {{- end }}
-        {{- include "supabase.waitForDBInitContainer" . | nindent 8 }}
-        {{- end }}
-        {{- if .Values.storage.initContainers }}
-          {{- include "common.tplvalues.render" (dict "value" .Values.storage.initContainers "context" $) | nindent 8 }}
+              until /usr/bin/mc alias set supa-minio http://{{ include "supabase.minio.fullname" . }}:{{ .Values.minio.service.port }} $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD; do
+                echo "Waiting for minio to start..."
+                sleep 2
+              done
+              /usr/bin/mc mb --ignore-existing supa-minio/stub
         {{- end }}
       containers:
-        - name: supabase-storage
-          image: {{ template "supabase.storage.image" . }}
+        - name: {{ include "supabase.storage.name" $ }}
+          securityContext:
+            {{- toYaml .Values.storage.securityContext | nindent 12 }}
+          image: "{{ .Values.storage.image.repository }}:{{ .Values.storage.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.storage.image.pullPolicy }}
-          {{- if .Values.storage.containerSecurityContext.enabled }}
-          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.storage.containerSecurityContext "context" $) | nindent 12 }}
-          {{- end }}
-          {{- if .Values.diagnosticMode.enabled }}
-          command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 12 }}
-          {{- else if .Values.storage.command }}
-          command: {{- include "common.tplvalues.render" (dict "value" .Values.storage.command "context" $) | nindent 12 }}
-          {{- else }}
-          command:
-            - /bin/bash
-          {{- end }}
-          {{- if .Values.diagnosticMode.enabled }}
-          args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 12 }}
-          {{- else if .Values.storage.args }}
-          args: {{- include "common.tplvalues.render" (dict "value" .Values.storage.args "context" $) | nindent 12 }}
-          {{- else }}
-          args:
-            - -ec
-            - |
-              #!/bin/bash
-
-              cd /opt/bitnami/supabase-storage
-              node dist/start/server.js
-          {{- end }}
           env:
-            - name: DB_USER
-              value: {{ include "supabase.database.user" . | quote }}
+            {{- range $key, $value := .Values.storage.environment }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.db.enabled }}
             - name: DB_HOST
-              value: {{ include "supabase.database.host" . | quote }}
-            - name: DB_PORT
-              value: {{ include "supabase.database.port" . | quote }}
-            - name: DB_NAME
-              value: {{ include "supabase.database.name" . | quote }}
+              value: {{ include "supabase.db.fullname" . }}
+            {{- end }}
+            {{- if .Values.rest.enabled }}
+            - name: POSTGREST_URL
+              value: http://{{ include "supabase.rest.fullname" . }}:{{ .Values.rest.service.port }}
+            {{- end }}
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.database.secretName" . }}
-                  key: {{ include "supabase.database.passwordKey" . | quote }}
+                  {{- if .Values.secret.db.secretRef }}
+                  name: {{ .Values.secret.db.secretRef }}
+                  key: {{ .Values.secret.db.secretRefKey.password | default "password" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.db" . }}
+                  key: password
+                  {{- end }}
+            - name: DB_PASSWORD_ENC
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.secret.db.secretRef }}
+                  name: {{ .Values.secret.db.secretRef }}
+                  key: {{ .Values.secret.db.secretRefKey.password | default "password" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.db" . }}
+                  key: password_encoded
+                  {{- end }}
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.secret.db.secretRef }}
+                  name: {{ .Values.secret.db.secretRef }}
+                  key: {{ .Values.secret.db.secretRefKey.database | default "database" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.db" . }}
+                  key: database
+                  {{- end }}
             - name: DATABASE_URL
-              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+              value: $(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD_ENC)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?search_path=auth&sslmode=$(DB_SSL)
             - name: PGRST_JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.jwt.secretName" . }}
-                  key: {{ include "supabase.jwt.secretKey" . }}
+                  {{- if .Values.secret.jwt.secretRef }}
+                  name: {{ .Values.secret.jwt.secretRef }}
+                  key: {{ .Values.secret.jwt.secretRefKey.secret | default "secret" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.jwt" . }}
+                  key: secret
+                  {{- end }}
             - name: ANON_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.jwt.secretName" . }}
-                  key: {{ include "supabase.jwt.anonSecretKey" . }}
+                  {{- if .Values.secret.jwt.secretRef }}
+                  name: {{ .Values.secret.jwt.secretRef }}
+                  key: {{ .Values.secret.jwt.secretRefKey.anonKey | default "anonKey" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.jwt" . }}
+                  key: anonKey
+                  {{- end }}
             - name: SERVICE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.jwt.secretName" . }}
-                  key: {{ include "supabase.jwt.serviceSecretKey" . }}
-            {{- if .Values.storage.extraEnvVars }}
-            {{- include "common.tplvalues.render" (dict "value" .Values.storage.extraEnvVars "context" $) | nindent 12 }}
+                  {{- if .Values.secret.jwt.secretRef }}
+                  name: {{ .Values.secret.jwt.secretRef }}
+                  key: {{ .Values.secret.jwt.secretRefKey.serviceKey | default "serviceKey" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.jwt" . }}
+                  key: serviceKey
+                  {{- end }}
+            {{- if .Values.imgproxy.enabled }}
+            - name: IMGPROXY_URL
+              value: http://{{ include "supabase.imgproxy.fullname" . }}:{{ .Values.imgproxy.service.port | int }}
             {{- end }}
-          envFrom:
-            - configMapRef:
-                name: {{ include "supabase.storage.defaultConfigmapName" . }}
-            {{- if .Values.storage.extraConfigExistingConfigmap }}
-            - configMapRef:
-                name: {{ include "supabase.storage.extraConfigmapName" . }}
+            {{- if eq (include "supabase.secret.s3.isValid" .) "true" }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                {{- if .Values.secret.s3.secretRef }}
+                  name: {{ .Values.secret.s3.secretRef }}
+                  key: {{ .Values.secret.s3.secretRefKey.keyId | default "keyId" }}
+                {{- else }}
+                  name: {{ include "supabase.secret.s3" . }}
+                  key: keyId
+                {{- end }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                {{- if .Values.secret.s3.secretRef }}
+                  name: {{ .Values.secret.s3.secretRef }}
+                  key: {{ .Values.secret.s3.secretRefKey.keyId | default "accessKey" }}
+                {{- else }}
+                  name: {{ include "supabase.secret.s3" . }}
+                  key: accessKey
+                {{- end }}
             {{- end }}
-            {{- if .Values.storage.extraEnvVarsCM }}
-            - configMapRef:
-                name: {{ include "common.tplvalues.render" (dict "value" .Values.storage.extraEnvVarsCM "context" $) }}
+            {{- if .Values.minio.enabled }}
+            - name: GLOBAL_S3_ENDPOINT
+              value: http://{{ include "supabase.minio.fullname" . }}:{{ default 9000 .Values.minio.service.port }}
             {{- end }}
-            {{- if .Values.storage.extraEnvVarsSecret }}
-            - secretRef:
-                name: {{ include "common.tplvalues.render" (dict "value" .Values.storage.extraEnvVarsSecret "context" $) }}
-            {{- end }}
-          {{- if .Values.storage.resources }}
-          resources: {{- toYaml .Values.storage.resources | nindent 12 }}
-          {{- else if ne .Values.storage.resourcesPreset "none" }}
-          resources: {{- include "common.resources.preset" (dict "type" .Values.storage.resourcesPreset) | nindent 12 }}
+          {{- with .Values.storage.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.storage.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
             - name: http
-              containerPort: {{ .Values.storage.containerPorts.http }}
-          {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.storage.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.storage.customLivenessProbe "context" $) | nindent 12 }}
-          {{- else if .Values.storage.livenessProbe.enabled }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.storage.livenessProbe "enabled") "context" $) | nindent 12 }}
-            tcpSocket:
-              port: http
-          {{- end }}
-          {{- if .Values.storage.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.storage.customReadinessProbe "context" $) | nindent 12 }}
-          {{- else if .Values.storage.readinessProbe.enabled }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.storage.readinessProbe "enabled") "context" $) | nindent 12 }}
-            httpGet:
-              path: /status
-              port: http
-          {{- end }}
-          {{- if .Values.storage.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.storage.customStartupProbe "context" $) | nindent 12 }}
-          {{- else if .Values.storage.startupProbe.enabled }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.storage.startupProbe "enabled") "context" $) | nindent 12 }}
-            httpGet:
-              path: /status
-              port: http
-          {{- end }}
-          {{- end }}
-          {{- if .Values.storage.lifecycleHooks }}
-          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.storage.lifecycleHooks "context" $) | nindent 12 }}
+              containerPort: 5000
+              protocol: TCP
+          {{- with .Values.storage.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: empty-dir
-              mountPath: /.pm2
-              subPath: app-pm2-dir
-            - name: data
-              mountPath: {{ .Values.storage.persistence.mountPath }}
-              {{- if .Values.storage.persistence.subPath }}
-              subPath: {{ .Values.storage.persistence.subPath }}
-              {{- end }}
-          {{- if .Values.storage.extraVolumeMounts }}
-          {{- include "common.tplvalues.render" (dict "value" .Values.storage.extraVolumeMounts "context" $) | nindent 12 }}
+          {{- with .Values.storage.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if .Values.storage.sidecars }}
-        {{- include "common.tplvalues.render" ( dict "value" .Values.storage.sidecars "context" $) | nindent 8 }}
-        {{- end }}
+            - mountPath: /var/lib/storage
+              name: storage-data
+      {{- with .Values.storage.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.storage.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.storage.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
-        - name: empty-dir
-          emptyDir: {}
-        - name: data
-        {{- if .Values.storage.persistence.enabled }}
+        - name: storage-data
+          {{- if .Values.storage.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ default (include "supabase.storage.fullname" .) .Values.storage.persistence.existingClaim }}
-        {{- else }}
-          emptyDir: {}
-        {{- end }}
-        {{- if .Values.storage.extraVolumes }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.storage.extraVolumes "context" $) | nindent 8 }}
+            claimName: {{ include "supabase.storage.fullname" . }}-pvc
+          {{- else }}
+          emptyDir:
+            medium: ""
+          {{- end }}
+        {{- with .Values.storage.volumes }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
 {{- end }}

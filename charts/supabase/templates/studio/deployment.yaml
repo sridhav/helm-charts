@@ -1,187 +1,115 @@
-{{- /*
-Copyright Broadcom, Inc. All Rights Reserved.
-SPDX-License-Identifier: APACHE-2.0
-*/}}
-
-{{- if .Values.studio.enabled }}
-apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+{{- if .Values.studio.enabled -}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "supabase.studio.fullname" . }}
-  namespace: {{ include "common.names.namespace" . | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
-    app.kubernetes.io/part-of: supabase
-    app.kubernetes.io/component: studio
-  {{- if .Values.commonAnnotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
-  {{- end }}
+  name: {{ include "supabase.studio.fullname" . }}
+  labels:
+    {{- include "supabase.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.studio.autoscaling.enabled }}
   replicas: {{ .Values.studio.replicaCount }}
-  {{- if .Values.studio.updateStrategy }}
-  strategy: {{- toYaml .Values.studio.updateStrategy | nindent 4 }}
   {{- end }}
-  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.studio.podLabels .Values.commonLabels ) "context" . ) }}
   selector:
-    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
-      app.kubernetes.io/component: studio
+    matchLabels:
+      {{- include "supabase.studio.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.studio.podAnnotations }}
       annotations:
-        {{- if .Values.studio.podAnnotations }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.studio.podAnnotations "context" $) | nindent 8 }}
-        {{- end }}
-        checksum/default-configmap: {{ include (print $.Template.BasePath "/studio/default-configmap.yaml") . | sha256sum }}
-        {{- if .Values.studio.extraConfig }}
-        checksum/extra-configmap: {{ include (print $.Template.BasePath "/studio/extra-configmap.yaml") . | sha256sum }}
-        {{- end }}
-        checksum/jwt-secret: {{ include (print $.Template.BasePath "/jwt-secret.yaml") . | sha256sum }}
-      labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
-        app.kubernetes.io/part-of: supabase
-        app.kubernetes.io/component: studio
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "supabase.studio.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ template "supabase.serviceAccountName" . }}
-      {{- include "supabase.imagePullSecrets" . | nindent 6 }}
-      automountServiceAccountToken: {{ .Values.studio.automountServiceAccountToken }}
-      {{- if .Values.studio.hostAliases }}
-      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.studio.hostAliases "context" $) | nindent 8 }}
+      {{- with .Values.studio.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.studio.affinity }}
-      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.studio.affinity "context" $) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.studio.podAffinityPreset "component" "studio" "customLabels" $podLabels "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.studio.podAntiAffinityPreset "component" "studio" "customLabels" $podLabels "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.studio.nodeAffinityPreset.type "key" .Values.studio.nodeAffinityPreset.key "values" .Values.studio.nodeAffinityPreset.values) | nindent 10 }}
-      {{- end }}
-      {{- if .Values.studio.nodeSelector }}
-      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.studio.nodeSelector "context" $) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.studio.tolerations }}
-      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.studio.tolerations "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.studio.priorityClassName }}
-      priorityClassName: {{ .Values.studio.priorityClassName | quote }}
-      {{- end }}
-      {{- if .Values.studio.schedulerName }}
-      schedulerName: {{ .Values.studio.schedulerName | quote }}
-      {{- end }}
-      {{- if .Values.studio.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.studio.topologySpreadConstraints "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.studio.podSecurityContext.enabled }}
-      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.studio.podSecurityContext "context" $) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.studio.terminationGracePeriodSeconds }}
-      terminationGracePeriodSeconds: {{ .Values.studio.terminationGracePeriodSeconds }}
-      {{- end }}
-      initContainers:
-        {{- if not .Values.diagnosticMode.enabled }}
-        {{- include "supabase.waitForDBInitContainer" . | nindent 8 }}
-        {{- end }}
-        {{- if .Values.studio.initContainers }}
-          {{- include "common.tplvalues.render" (dict "value" .Values.studio.initContainers "context" $) | nindent 8 }}
-        {{- end }}
+      serviceAccountName: {{ include "supabase.studio.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.studio.podSecurityContext | nindent 8 }}
       containers:
-        - name: supabase-studio
-          image: {{ template "supabase.studio.image" . }}
+        - name: {{ include "supabase.studio.name" $ }}
+          securityContext:
+            {{- toYaml .Values.studio.securityContext | nindent 12 }}
+          image: "{{ .Values.studio.image.repository }}:{{ .Values.studio.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.studio.image.pullPolicy }}
-          {{- if .Values.studio.containerSecurityContext.enabled }}
-          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.studio.containerSecurityContext "context" $) | nindent 12 }}
-          {{- end }}
-          {{- if .Values.diagnosticMode.enabled }}
-          command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 12 }}
-          {{- else if .Values.studio.command }}
-          command: {{- include "common.tplvalues.render" (dict "value" .Values.studio.command "context" $) | nindent 12 }}
-          {{- end }}
-          {{- if .Values.diagnosticMode.enabled }}
-          args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 12 }}
-          {{- else if .Values.studio.args }}
-          args: {{- include "common.tplvalues.render" (dict "value" .Values.studio.args "context" $) | nindent 12 }}
-          {{- end }}
           env:
+            {{- range $key, $value := .Values.studio.environment }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.kong.enabled }}
+            - name: SUPABASE_URL
+              value: http://{{ include "supabase.kong.fullname" . }}:{{ .Values.kong.service.port }}
+            {{- end }}
+            {{- if .Values.meta.enabled }}
+            - name: STUDIO_PG_META_URL
+              value: http://{{ include "supabase.meta.fullname" . }}:{{ .Values.meta.service.port }}
+            {{- end }}
             - name: SUPABASE_ANON_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.jwt.secretName" . }}
-                  key: {{ include "supabase.jwt.anonSecretKey" . }}
+                  {{- if .Values.secret.jwt.secretRef }}
+                  name: {{ .Values.secret.jwt.secretRef }}
+                  key: {{ .Values.secret.jwt.secretRefKey.anonKey | default "anonKey" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.jwt" . }}
+                  key: anonKey
+                  {{- end }}
             - name: SUPABASE_SERVICE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.jwt.secretName" . }}
-                  key: {{ include "supabase.jwt.serviceSecretKey" . }}
-            - name: SUPABASE_KEY_ADMIN
+                  {{- if .Values.secret.jwt.secretRef }}
+                  name: {{ .Values.secret.jwt.secretRef }}
+                  key: {{ .Values.secret.jwt.secretRefKey.serviceKey | default "serviceKey" }}
+                  {{- else }}
+                  name: {{ include "supabase.secret.jwt" . }}
+                  key: serviceKey
+                  {{- end }}
+            {{- if .Values.analytics.enabled }}
+            - name: LOGFLARE_URL
+              value: http://{{ include "supabase.analytics.fullname" . }}:{{ .Values.analytics.service.port }}
+            - name: LOGFLARE_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "supabase.jwt.secretName" . }}
-                  key: {{ include "supabase.jwt.serviceSecretKey" . }}
-            {{- if .Values.studio.extraEnvVars }}
-            {{- include "common.tplvalues.render" (dict "value" .Values.studio.extraEnvVars "context" $) | nindent 12 }}
+                  name: {{ include "supabase.secret.analytics" . }}
+                  key: apiKey
             {{- end }}
-          envFrom:
-            - configMapRef:
-                name: {{ include "supabase.studio.defaultConfigmapName" . }}
-            {{- if .Values.studio.extraConfigExistingConfigmap }}
-            - configMapRef:
-                name: {{ include "supabase.studio.extraConfigmapName" . }}
-            {{- end }}
-            {{- if .Values.studio.extraEnvVarsCM }}
-            - configMapRef:
-                name: {{ include "common.tplvalues.render" (dict "value" .Values.studio.extraEnvVarsCM "context" $) }}
-            {{- end }}
-            {{- if .Values.studio.extraEnvVarsSecret }}
-            - secretRef:
-                name: {{ include "common.tplvalues.render" (dict "value" .Values.studio.extraEnvVarsSecret "context" $) }}
-            {{- end }}
-          {{- if .Values.studio.resources }}
-          resources: {{- toYaml .Values.studio.resources | nindent 12 }}
-          {{- else if ne .Values.studio.resourcesPreset "none" }}
-          resources: {{- include "common.resources.preset" (dict "type" .Values.studio.resourcesPreset) | nindent 12 }}
+          {{- with .Values.studio.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.studio.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
-            - name: http-studio
-              containerPort: {{ .Values.studio.containerPorts.http }}
-          {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.studio.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.studio.customLivenessProbe "context" $) | nindent 12 }}
-          {{- else if .Values.studio.livenessProbe.enabled }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.studio.livenessProbe "enabled") "context" $) | nindent 12 }}
-            tcpSocket:
-              port: http-studio
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          {{- with .Values.studio.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.studio.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.studio.customReadinessProbe "context" $) | nindent 12 }}
-          {{- else if .Values.studio.readinessProbe.enabled }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.studio.readinessProbe "enabled") "context" $) | nindent 12 }}
-            httpGet:
-              path: /
-              port: http-studio
-          {{- end }}
-          {{- if .Values.studio.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.studio.customStartupProbe "context" $) | nindent 12 }}
-          {{- else if .Values.studio.startupProbe.enabled }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.studio.startupProbe "enabled") "context" $) | nindent 12 }}
-            httpGet:
-              path: /
-              port: http-studio
-          {{- end }}
-          {{- end }}
-          {{- if .Values.studio.lifecycleHooks }}
-          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.studio.lifecycleHooks "context" $) | nindent 12 }}
-          {{- end }}
+          {{- with .Values.studio.volumeMounts }}
           volumeMounts:
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-          {{- if .Values.studio.extraVolumeMounts }}
-          {{- include "common.tplvalues.render" (dict "value" .Values.studio.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if .Values.studio.sidecars }}
-        {{- include "common.tplvalues.render" ( dict "value" .Values.studio.sidecars "context" $) | nindent 8 }}
-        {{- end }}
+      {{- with .Values.studio.volumes }}
       volumes:
-        - name: empty-dir
-          emptyDir: {}
-        {{- if .Values.studio.extraVolumes }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.studio.extraVolumes "context" $) | nindent 8 }}
-        {{- end }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.studio.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.studio.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.studio.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- end }}
