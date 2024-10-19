@@ -3,6 +3,21 @@ entries:
   akaunting:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2024-10-19T00:46:23.651803145Z"
+    dependencies:
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: https://charts.bitnami.com/bitnami
+      version: 19.1.0
+    description: A Helm chart for Kubernetes
+    digest: 33ed68768819a9d5b69117221f09000c3b008d801916579eb80538e17403455b
+    name: akaunting
+    type: application
+    urls:
+    - https://github.com/sridhav/helm-charts/releases/download/akaunting-0.1.6/akaunting-0.1.6.tgz
+    version: 0.1.6
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2024-10-19T00:43:20.466152747Z"
     dependencies:
     - condition: mariadb.enabled
@@ -704,4 +719,4 @@ entries:
     urls:
     - https://github.com/sridhav/helm-charts/releases/download/supabase-0.1.3/supabase-0.1.3.tgz
     version: 0.1.3
-generated: "2024-10-19T00:43:20.466232567Z"
+generated: "2024-10-19T00:46:23.651898423Z"
