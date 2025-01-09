@@ -7,7 +7,7 @@ annotations:
         - name: Release Notes Breaking Changes
           url: https://github.com/immich-app/immich/releases/tag/v1.95.1
 apiVersion: v2
-appVersion: v1.106.1
+appVersion: v1.119.0
 dependencies:
   - name: common
     repository: https://bjw-s.github.io/helm-charts
@@ -15,11 +15,11 @@ dependencies:
   - condition: postgresql.enabled
     name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 13.2.24
+    version: 16.0.0
   - condition: redis.enabled
     name: redis
     repository: https://charts.bitnami.com/bitnami
-    version: 18.4.0
+    version: 19.5.3
 description: A chart to power Immich (immich.app) running on kubernetes
 home: https://immich.app/
 icon: https://raw.githubusercontent.com/immich-app/immich/main/design/immich-logo.svg
@@ -32,4 +32,4 @@ name: immich
 sources:
   - https://github.com/immich-app/immich-charts/tree/main/charts/immich
   - https://github.com/immich-app/immich
-version: 0.7.0
+version: 0.9.0
